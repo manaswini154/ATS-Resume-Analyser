@@ -18,17 +18,25 @@ logger=logging.getLogger('ats_resume_scorer')
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info('Starting ATS Resume Analyzer API...')
-
-    logger.info(f'Loading spaCy NLP model: {SPACY_MODEL_PRIMARY}')
     import spacy
+    
+    model_name = "en_core_web_sm"
+    logger.info(f'Loading spaCy NLP model: {model_name}')
+    
     try:
-        # REMOVED "parser" FROM THE DISABLE LIST
-        app.state.nlp = spacy.load(SPACY_MODEL_PRIMARY, disable=["ner"])
-        logger.info(f'Loaded {SPACY_MODEL_PRIMARY} (with parser enabled)')
+        # 1. Force try standard load with parser enabled
+        app.state.nlp = spacy.load(model_name, disable=["ner"])
+        logger.info(f'Loaded {model_name} successfully from local disk environment.')
     except OSError:
-        logger.warning(f'{SPACY_MODEL_PRIMARY} not found — falling back to {SPACY_MODEL_SECONDARY}')
-        app.state.nlp = spacy.load(SPACY_MODEL_SECONDARY)
-        logger.info(f'Loaded {SPACY_MODEL_SECONDARY} (fallback)')
+        # 2. Automated fallback downloading mechanism if missing from disk
+        logger.warning(f'{model_name} package files not found on disk. Downloading now...')
+        from spacy.cli import download
+        download(model_name)
+        
+        # 3. Reload after download (Parser explicitly enabled)
+        app.state.nlp = spacy.load(model_name, disable=["ner"])
+        logger.info(f'Downloaded and loaded {model_name} successfully.')
+
 
 
     logger.info(f'Loading SentenceTransformer: {SENTENCE_TRANSFORMER_MODEL}')
