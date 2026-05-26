@@ -18,6 +18,7 @@ APP_DESCRIPTION='analyse resumes against job description using nlp + ml'
 
 ALLOWED_ORIGINS = [
     'https://appapppy-ktwxupi73vqhjzweksze9d.streamlit.app/'
+    'https://manaswini11-ats-resume-analyser.hf.space'
 ]  
 
 #file 
