@@ -6,7 +6,30 @@ import streamlit as st
 
 DEFAULT_BACKEND_URL ="https://manaswini11-ats-resume-analyser.hf.space"
 
+from requests.exceptions import HTTPError
 
+class TokenExpiredError(Exception):
+    pass
+
+class BackendError(Exception):
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        self.message = message
+        super().__init__(message)
+
+def _raise_for_status(response: requests.Response) -> None:
+    """Raises clean exceptions instead of raw HTTPError."""
+    try:
+        response.raise_for_status()
+    except HTTPError:
+        if response.status_code == 401:
+            raise TokenExpiredError("Session expired — please sign in again.")
+        # Try to get detail from backend JSON error
+        try:
+            detail = response.json().get("detail", response.text)
+        except Exception:
+            detail = response.text
+        raise BackendError(response.status_code, f"Backend error {response.status_code}: {detail}")
 def _backend_url() -> str:
     try:
         return st.secrets["backend"]["url"]
