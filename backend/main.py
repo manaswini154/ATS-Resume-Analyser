@@ -16,18 +16,20 @@ from backend.api.routes import router
 logger=logging.getLogger('ats_resume_scorer')
 
 @asynccontextmanager
-async def lifespan(app:FastAPI):
+async def lifespan(app: FastAPI):
     logger.info('Starting ATS Resume Analyzer API...')
 
     logger.info(f'Loading spaCy NLP model: {SPACY_MODEL_PRIMARY}')
     import spacy
     try:
-        app.state.nlp = spacy.load(SPACY_MODEL_PRIMARY, disable=["ner", "parser"])
-        logger.info(f'Loaded {SPACY_MODEL_PRIMARY}')
+        # REMOVED "parser" FROM THE DISABLE LIST
+        app.state.nlp = spacy.load(SPACY_MODEL_PRIMARY, disable=["ner"])
+        logger.info(f'Loaded {SPACY_MODEL_PRIMARY} (with parser enabled)')
     except OSError:
         logger.warning(f'{SPACY_MODEL_PRIMARY} not found — falling back to {SPACY_MODEL_SECONDARY}')
         app.state.nlp = spacy.load(SPACY_MODEL_SECONDARY)
         logger.info(f'Loaded {SPACY_MODEL_SECONDARY} (fallback)')
+
 
     logger.info(f'Loading SentenceTransformer: {SENTENCE_TRANSFORMER_MODEL}')
     from sentence_transformers import SentenceTransformer
