@@ -49,10 +49,10 @@ def analyze_skills_gap(
         if ent.label_ in ['PRODUCT', 'ORG', 'LANGUAGE']:
             jd_skills.add(ent.text.lower())
 
-    for chunk in doc.noun_chunks:
-        ct = chunk.text.lower().strip()
-        if 1 <= len(ct.split()) <= 4:
-            jd_skills.add(ct)
+    # ✅ Replace noun_chunks with POS-based extraction (no parser needed)
+    for token in doc:
+        if token.pos_ in ("NOUN", "PROPN") and not token.is_stop:
+            jd_skills.add(token.text.lower().strip())
 
     # Normalize resume skills for comparison
     resume_normalized = {normalize_skill(s) for s in resume_skills}
